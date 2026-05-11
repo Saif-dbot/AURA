@@ -128,7 +128,7 @@ class AuraApp(tk.Tk):
         shell.pack(fill="both", expand=True)
 
         login_card = tk.Frame(shell, bg=PANEL_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER)
-        login_card.place(relx=0.5, rely=0.5, anchor="center", width=540, height=340)
+        login_card.place(relx=0.5, rely=0.5, anchor="center", width=540, height=350)
 
         tk.Label(login_card, text="AURA", bg=PANEL_BG, fg=PRIMARY, font=("Segoe UI", 26, "bold")).pack(pady=(26, 0))
         tk.Label(login_card, text="Industrial Intelligence Command Center", bg=PANEL_BG, fg=MUTED, font=FONT_SUBHEADER).pack(pady=(2, 18))
@@ -143,9 +143,7 @@ class AuraApp(tk.Tk):
 
         tk.Label(form, text="Mot de passe", bg=PANEL_BG, fg=TEXT, font=FONT_SMALL).pack(anchor="w")
         self.ent_login_password = ttk.Entry(form, show="*")
-        self.ent_login_password.pack(fill="x", pady=(4, 10))
-
-        tk.Label(form, text=DEFAULT_ADMIN_HINT, bg=PANEL_BG, fg=MUTED, font=FONT_SMALL).pack(anchor="w", pady=(2, 16))
+        self.ent_login_password.pack(fill="x", pady=(4, 30))
 
         ttk.Button(form, text="Se connecter", command=self.login_action, style="Primary.TButton").pack(fill="x")
 
