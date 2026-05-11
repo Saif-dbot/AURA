@@ -1,4 +1,4 @@
-# 🚀 AURA - Roadmap d'Amélioration
+# AURA - Roadmap d'Amélioration
 
 ## Vision
 AURA évolue d'un prototype desktop vers une application locale d'aide à la maintenance, centrée sur la traçabilité, l'assistance décisionnelle et la génération d'instructions techniques.
