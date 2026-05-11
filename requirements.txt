@@ -1,0 +1,10 @@
+pandas
+numpy
+matplotlib
+seaborn
+spacy
+sentence-transformers
+PyPDF2
+python-docx
+scikit-learn
+reportlab

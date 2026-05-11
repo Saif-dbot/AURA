@@ -1,0 +1,185 @@
+\documentclass[10pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title{AURA Desktop\newline Presentation technique basee sur le code}
+\author{Projet AURA}
+\date{11 Mai 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Objectif reel du projet}
+\begin{itemize}
+\item AURA est une application desktop Python (Tkinter) pour la maintenance industrielle.
+\item Elle regroupe en une seule interface: tableaux de bord, analyse NLP, generation d'instructions, planification TRS, orchestration des equipes et historique d'actions.
+\item Le systeme est orientee aide a la decision locale (poste Windows), pas une plateforme web distribuee.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Architecture logicielle}
+\begin{itemize}
+\item Point d'entree: \texttt{main.py} lance \texttt{AuraApp}.
+\item Interface principale: \texttt{src/gui.py} (onglets metier).
+\item Modules metier:
+\begin{itemize}
+\item \texttt{src/dashboards.py}: radar, gantt, heatmap.
+\item \texttt{src/nlp\_engine.py}: extraction manuels + RCA semantique.
+\item \texttt{src/prompt\_generator.py}: instructions maintenance + export PDF.
+\item \texttt{src/planning.py}: TRS + roadmap 3 ans.
+\item \texttt{src/scheduling.py}: affectation techniciens.
+\end{itemize}
+\item Infrastructure locale:
+\begin{itemize}
+\item \texttt{src/storage.py}: journal d'evenements SQLite.
+\item \texttt{src/app\_logger.py}: logs fichier + console.
+\item \texttt{src/app\_config.py}: configuration centralisee.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interface utilisateur (ce qui existe)}
+\begin{itemize}
+\item 6 onglets actifs:
+\begin{itemize}
+\item Tableau de Bord
+\item Analyse NLP
+\item Generateur d'Instructions
+\item Planification Strategique
+\item Orchestration
+\item Historique
+\end{itemize}
+\item Barre de statut en bas de fenetre pour le retour utilisateur.
+\item Validation d'entree sur les actions principales (analyse, planification, affectation, etc.).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Module Dashboards}
+\begin{itemize}
+\item Radar: 5 dimensions (Vibrations, Temperature, Pression, Bruit, Lubrification).
+\item Gantt: timeline de taches de maintenance (dates + durees).
+\item Heatmap: stress/defaillances par composant et jour.
+\item Les graphes sont rendus dans Tkinter via Matplotlib (FigureCanvasTkAgg).
+\item Simulation possible via generation aleatoire des valeurs radar.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Module NLP (exactement selon le code)}
+\begin{itemize}
+\item Chargement optionnel de:
+\begin{itemize}
+\item spaCy (modele \texttt{fr\_core\_news\_md})
+\item sentence-transformers (\texttt{paraphrase-multilingual-MiniLM-L12-v2})
+\end{itemize}
+\item Extraction de texte depuis PDF, DOCX, TXT.
+\item Extraction d'informations:
+\begin{itemize}
+\item composants critiques
+\item frequences de lubrification
+\item seuils d'alerte
+\end{itemize}
+\item RCA: similarite cosinus entre rapport utilisateur et base de connaissances.
+\item Seuil de decision RCA: confiance > 0.4 pour retenir la cause la plus proche.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Generateur d'instructions et export}
+\begin{itemize}
+\item Le generateur n'est pas un LLM distant dans la version actuelle.
+\item Mecanisme actuel: recherche par mots-cles (roulement, moteur, pompe) dans un dictionnaire interne.
+\item Reponse enrichie par recommendation LOTO.
+\item Export PDF disponible via ReportLab.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Planification strategique}
+\begin{itemize}
+\item Calcul TRS:
+\[
+TRS = \frac{production\_reelle}{capacite\_theorique} \times 100
+\]
+\item Statuts:
+\begin{itemize}
+\item Critique si TRS < 80
+\item Acceptable si 80 <= TRS < 90
+\item Optimal si TRS >= 90
+\end{itemize}
+\item Generation d'une roadmap 3 ans dynamique.
+\item La roadmap s'adapte a l'historique NLP (ex: motifs moteur/roulement).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Orchestration des equipes}
+\begin{itemize}
+\item Donnees initiales: liste de techniciens, competences, disponibilite, charge.
+\item Algorithme d'affectation:
+\begin{enumerate}
+\item filtrer techniciens disponibles avec la competence requise
+\item trier par charge croissante
+\item assigner le technicien le moins charge
+\end{enumerate}
+\item Si aucun profil compatible: statut Echec et mise en attente.
+\item Visualisation en tableau de la charge de travail en temps reel.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Persistence, historique et tracabilite}
+\begin{itemize}
+\item Base locale SQLite: table \texttt{events(id, event\_type, payload, created\_at)}.
+\item Journalisation des actions utilisateur:
+\begin{itemize}
+\item chargement manuel
+\item analyse NLP
+\item generation prompt
+\item export PDF
+\item mise a jour planification
+\item affectation taches
+\end{itemize}
+\item Onglet Historique: lecture des 50 derniers evenements.
+\item Logs applicatifs: console + fichier rotatif (1 MB, 3 backups).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ce que le projet ne fait pas encore}
+\begin{itemize}
+\item Pas d'authentification utilisateur.
+\item Pas de backend API operationnel expose.
+\item Pas d'integration IoT active (MQTT/OPC-UA) dans la version actuelle.
+\item Pas de modele de prediction ML entrainable en production.
+\item Pas encore de packaging installeur finalise (MSI/Inno Setup).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Stack technique reelle}
+\begin{tabular}{ll}
+\toprule
+Couche & Technologies utilisees \\
+\midrule
+Desktop UI & Tkinter, ttk \\
+Visualisation & Matplotlib, Seaborn, NumPy \\
+NLP & spaCy, sentence-transformers \\
+Documents & PyPDF2, python-docx \\
+PDF & ReportLab \\
+Donnees locales & SQLite (sqlite3) \\
+Logs & logging + RotatingFileHandler \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Conclusion}
+\begin{itemize}
+\item AURA est deja un socle desktop fonctionnel orientee maintenance industrielle.
+\item Le code actuel privilegie l'usage local, la visualisation, l'analyse semantique et la traçabilite.
+\item Les prochaines etapes les plus logiques sont: auth locale, theming UI avance, packaging executable Windows.
+\end{itemize}
+\end{frame}
+
+\end{document}
