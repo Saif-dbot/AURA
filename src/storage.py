@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List
 
-from database.connection import get_connection, initialize_database
+from src.database.connection import get_connection, initialize_database
 
 
 class EventStore:

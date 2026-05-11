@@ -4,7 +4,7 @@ from datetime import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
-from app_config import DB_PATH
+from src.app_config import DB_PATH
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 

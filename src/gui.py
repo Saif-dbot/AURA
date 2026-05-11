@@ -2,12 +2,12 @@ import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
-from dashboards import DashboardManager
-from nlp_engine import NLPEngine
-from prompt_generator import PromptGenerator
-from planning import MaintenancePlanner
-from scheduling import TaskScheduler
-from app_config import (
+from src.dashboards import DashboardManager
+from src.nlp_engine import NLPEngine
+from src.prompt_generator import PromptGenerator
+from src.planning import MaintenancePlanner
+from src.scheduling import TaskScheduler
+from src.app_config import (
     APP_BG,
     APP_GEOMETRY,
     APP_THEME,
@@ -22,11 +22,11 @@ from app_config import (
     OLLAMA_MODEL,
     DEFAULT_ADMIN_HINT,
 )
-from app_logger import setup_logger
-from storage import EventStore
-from auth_manager import AuthManager
-from llm_service import OllamaService
-from theme import (
+from src.app_logger import setup_logger
+from src.storage import EventStore
+from src.auth_manager import AuthManager
+from src.llm_service import OllamaService
+from src.theme import (
     APP_BG as THEME_BG,
     PANEL_BG,
     SIDEBAR_BG,
@@ -283,8 +283,18 @@ class AuraApp(tk.Tk):
                 button.configure(bg=SIDEBAR_BG, fg=TEXT)
 
         self.pages[page_name].tkraise()
+        
+        # Rafraîchir les données selon la page affichée
         if page_name == "home":
             self.refresh_home_metrics()
+        elif page_name == "tab_history":
+            self.refresh_history()
+        elif page_name == "tab_planning":
+            self.update_planning()
+        elif page_name == "tab_scheduling":
+            self.update_workload_table()
+        elif page_name == "tab_dashboards":
+            self.refresh_dashboards()
 
     def page_titles(self):
         return {
@@ -391,6 +401,11 @@ class AuraApp(tk.Tk):
                 self.home_activity_box.delete("1.0", "end")
                 self.home_activity_box.insert("1.0", "Aucune activité enregistrée.")
                 self.home_activity_box.configure(state="disabled")
+
+    def refresh_dashboards(self):
+        """Rafraîchir le tableau de bord avec les données actuelles."""
+        if hasattr(self, "dash_manager"):
+            self.show_dashboard_radar()
 
     def build_dashboards_page(self, page):
         page.grid_columnconfigure(0, weight=1)

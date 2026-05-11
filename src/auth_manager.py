@@ -3,7 +3,7 @@ import os
 import sqlite3
 from typing import Optional, Tuple
 
-from database.connection import get_connection, initialize_database
+from src.database.connection import get_connection, initialize_database
 
 
 class AuthManager:
