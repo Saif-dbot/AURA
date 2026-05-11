@@ -166,7 +166,3 @@ This project is currently suitable as a local prototype and internal operational
 - packaging and installer creation
 - audit and compliance review
 - RAG indexing pipeline for documents
-
-## License
-
-No license has been defined yet. Add one before public distribution.
