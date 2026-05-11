@@ -20,11 +20,17 @@ from src.app_config import (
     LOG_PATH,
     OLLAMA_BASE_URL,
     OLLAMA_MODEL,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    MISTRAL_API_KEY,
+    MISTRAL_MODEL,
+    LLM_PRIMARY_PROVIDER,
     DEFAULT_ADMIN_HINT,
 )
 from src.app_logger import setup_logger
 from src.storage import EventStore
 from src.auth_manager import AuthManager
+from src.llm_manager import LLMManager
 from src.llm_service import OllamaService
 from src.theme import (
     APP_BG as THEME_BG,
@@ -70,6 +76,14 @@ class AuraApp(tk.Tk):
         self.logger = setup_logger(LOG_PATH)
         self.store = EventStore(DB_PATH)
         self.auth_manager = AuthManager(DB_PATH)
+
+        # Initialize LLM Manager with multi-provider support
+        self.llm_manager = LLMManager()
+        self.llm_manager.setup_ollama(OLLAMA_BASE_URL, OLLAMA_MODEL)
+        self.llm_manager.setup_groq(GROQ_API_KEY, GROQ_MODEL)
+        self.llm_manager.setup_mistral(MISTRAL_API_KEY, MISTRAL_MODEL)
+        self.llm_manager.set_primary_provider(LLM_PRIMARY_PROVIDER)
+
         self.llm_service = OllamaService(base_url=OLLAMA_BASE_URL, model=OLLAMA_MODEL)
         self.prompt_generator = PromptGenerator(llm_service=self.llm_service)
         self.planner = MaintenancePlanner()

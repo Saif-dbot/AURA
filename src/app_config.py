@@ -38,8 +38,16 @@ LOG_PATH = os.path.join(APP_DATA_DIR, "logs", "aura.log")
 # Allow overriding the DB path without changing code.
 DB_PATH = os.getenv("AURA_DB_PATH", os.path.join(APP_DATA_DIR, DB_FILENAME))
 
-OLLAMA_BASE_URL = "http://127.0.0.1:11434"
-OLLAMA_MODEL = "llama3.1:8b"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")
+
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "mistral-large")
+
+LLM_PRIMARY_PROVIDER = os.getenv("LLM_PRIMARY_PROVIDER", "groq")
 
 DEFAULT_ADMIN_USER = "admin"
 DEFAULT_ADMIN_HINT = "Mot de passe initial: admin123"
