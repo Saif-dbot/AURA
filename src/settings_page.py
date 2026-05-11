@@ -103,6 +103,52 @@ def build_settings_page(self, page):
     test_button.pack(anchor="w", padx=8, pady=8)
     self.lbl_groq_status = tk.Label(sub_frame, text="", bg="#F8F9FA", fg="#E74C3C", font=("Segoe UI", 9))
     self.lbl_groq_status.pack(anchor="w", padx=8)
+
+    # ===== MISTRAL API =====
+    mistral_frame = tk.Frame(content_frame, bg="#FFFFFF")
+    mistral_frame.pack(fill="x", pady=(0, 20))
+    tk.Label(
+        mistral_frame,
+        text="☁️  Mistral API (LLM Cloud)",
+        bg="#FFFFFF",
+        fg="#2C3E50",
+        font=("Segoe UI", 12, "bold")
+    ).pack(anchor="w", pady=(0, 8))
+
+    sub_frame = tk.Frame(mistral_frame, bg="#F8F9FA")
+    sub_frame.pack(fill="x", padx=12, pady=(0, 8))
+
+    info_text = tk.Label(
+        sub_frame,
+        text="Utilisez votre clé Mistral API (Bearer token).",
+        bg="#F8F9FA",
+        fg="#7F8C8D",
+        font=("Segoe UI", 9),
+        justify="left"
+    )
+    info_text.pack(anchor="w", padx=8, pady=(0, 8))
+
+    tk.Label(sub_frame, text="Clé API Mistral:", bg="#F8F9FA", font=("Segoe UI", 10)).pack(anchor="w", padx=8, pady=4)
+    self.ent_mistral_key = ttk.Entry(sub_frame, width=50, show="*")
+    self.ent_mistral_key.pack(anchor="w", padx=8, pady=4, fill="x")
+
+    tk.Label(sub_frame, text="Modèle Mistral:", bg="#F8F9FA", font=("Segoe UI", 10)).pack(anchor="w", padx=8, pady=4)
+    self.cmb_mistral_model = ttk.Combobox(
+        sub_frame,
+        values=["mistral-large", "mistral-small"],
+        state="readonly"
+    )
+    self.cmb_mistral_model.set("mistral-large")
+    self.cmb_mistral_model.pack(anchor="w", padx=8, pady=4, fill="x")
+
+    test_button = ttk.Button(
+        sub_frame,
+        text="🔍 Tester Mistral API",
+        command=self.test_mistral_connection
+    )
+    test_button.pack(anchor="w", padx=8, pady=8)
+    self.lbl_mistral_status = tk.Label(sub_frame, text="", bg="#F8F9FA", fg="#E74C3C", font=("Segoe UI", 9))
+    self.lbl_mistral_status.pack(anchor="w", padx=8)
     
     # ===== LLM PRÉFÉRENCE =====
     pref_frame = tk.Frame(content_frame, bg="#FFFFFF")
@@ -121,7 +167,7 @@ def build_settings_page(self, page):
     tk.Label(sub_frame, text="Provider:", bg="#F8F9FA", font=("Segoe UI", 10)).pack(anchor="w", padx=8, pady=4)
     self.cmb_llm_prov = ttk.Combobox(
         sub_frame,
-        values=["ollama", "groq"],
+        values=["ollama", "groq", "mistral"],
         state="readonly"
     )
     self.cmb_llm_prov.set("ollama")
@@ -198,13 +244,41 @@ def test_groq_connection(self):
         self.set_status("Erreur lors de la vérification")
 
 
+def test_mistral_connection(self):
+    """Tester la connexion à Mistral API."""
+    key = self.ent_mistral_key.get().strip()
+    if not key:
+        self.lbl_mistral_status.config(text="❌ Clé API manquante", fg="#E74C3C")
+        messagebox.showwarning("Clé API manquante", "Veuillez entrer votre clé API Mistral")
+        return
+
+    self.set_status("Test Mistral en cours...")
+    self.lbl_mistral_status.config(text="Vérification...", fg="#3498DB")
+    self.update()
+
+    try:
+        from src.llm_manager import MistralService
+        service = MistralService(key, self.cmb_mistral_model.get())
+        if service.is_available():
+            self.lbl_mistral_status.config(text="✅ Mistral API est active!", fg="#27AE60")
+            self.set_status("Mistral API est disponible")
+        else:
+            self.lbl_mistral_status.config(text="❌ Clé API invalide/indisponible", fg="#E74C3C")
+            self.set_status("Erreur: Mistral API invalide")
+    except Exception as e:
+        self.lbl_mistral_status.config(text=f"❌ Erreur: {str(e)[:30]}", fg="#E74C3C")
+        self.set_status("Erreur lors de la vérification")
+
+
 def save_llm_config(self):
     """Enregistrer la configuration LLM."""
     config = {
         "ollama_url": self.ent_ollama_url.get().strip(),
         "ollama_model": self.ent_ollama_model.get().strip(),
         "groq_key": self.ent_groq_key.get().strip(),
+        "mistral_key": self.ent_mistral_key.get().strip(),
         "groq_model": self.cmb_groq_model.get(),
+        "mistral_model": self.cmb_mistral_model.get(),
         "primary_provider": self.cmb_llm_prov.get(),
     }
     
@@ -227,6 +301,8 @@ def save_llm_config(self):
         "OLLAMA_MODEL": f"{config['ollama_model']}\n",
         "GROQ_API_KEY": f"{config['groq_key']}\n" if config['groq_key'] else "",
         "GROQ_MODEL": f"{config['groq_model']}\n",
+        "MISTRAL_API_KEY": f"{config['mistral_key']}\n" if config['mistral_key'] else "",
+        "MISTRAL_MODEL": f"{config['mistral_model']}\n",
         "LLM_PRIMARY_PROVIDER": f"{config['primary_provider']}\n",
     }
     
@@ -271,6 +347,8 @@ def reset_llm_config(self):
     self.ent_groq_key.delete(0, "end")
     self.cmb_groq_model.set("mixtral-8x7b-32768")
     self.cmb_llm_prov.set("ollama")
+    self.ent_mistral_key.delete(0, "end")
+    self.cmb_mistral_model.set("mistral-large")
     
     self.lbl_ollama_status.config(text="", fg="#27AE60")
     self.lbl_groq_status.config(text="", fg="#E74C3C")

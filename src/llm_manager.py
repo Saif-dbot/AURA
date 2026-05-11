@@ -87,12 +87,93 @@ class GroqService:
             return False
 
 
+class MistralService:
+    """Service pour Mistral API (cloud)."""
+
+    def __init__(self, api_key: str, model: str = "mistral-large", timeout: int = 60):
+        self.api_key = api_key
+        self.model = model
+        self.timeout = timeout
+        self.base_url = "https://api.mistral.ai"
+        self.provider = "mistral"
+
+    def _post_json(self, endpoint: str, payload: Dict) -> Optional[Dict]:
+        url = f"{self.base_url}{endpoint}"
+        data = json.dumps(payload).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                body = response.read().decode("utf-8")
+                return json.loads(body)
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError):
+            return None
+
+    def generate_maintenance_instruction(self, query: str, knowledge_hints: str = "") -> Optional[str]:
+        prompt = (
+            "Tu es un assistant de maintenance industrielle. "
+            "Donne une procedure pratique, structuree et concise en francais. "
+            "Inclure: securite, outils, etapes, verification finale."
+        )
+        user_input = f"{knowledge_hints}\n\nDemande: {query}" if knowledge_hints else query
+        payload = {
+            "inputs": f"{prompt}\n\n{user_input}",
+            "parameters": {"temperature": 0.2, "max_new_tokens": 512}
+        }
+        endpoint = f"/v1/models/{self.model}/generate"
+        result = self._post_json(endpoint, payload)
+        if not result:
+            return None
+
+        # Tentatives d'extraction du texte selon différents formats de réponse
+        try:
+            if "results" in result and isinstance(result["results"], list):
+                r0 = result["results"][0]
+                if isinstance(r0, dict):
+                    if "content" in r0 and isinstance(r0["content"], list):
+                        for item in r0["content"]:
+                            if isinstance(item, dict) and "text" in item:
+                                return item["text"].strip()
+                    if "output_text" in r0:
+                        return str(r0["output_text"]).strip()
+
+            if "outputs" in result and isinstance(result["outputs"], list):
+                for out in result["outputs"]:
+                    if isinstance(out, dict) and "content" in out:
+                        for c in out["content"]:
+                            if isinstance(c, dict) and "text" in c:
+                                return c["text"].strip()
+
+            if "text" in result:
+                return str(result["text"]).strip()
+            if "response" in result:
+                return str(result["response"]).strip()
+        except Exception:
+            return None
+
+        return None
+
+    def is_available(self) -> bool:
+        if not self.api_key or self.api_key.strip() == "":
+            return False
+        try:
+            payload = {"inputs": "test", "parameters": {"max_new_tokens": 1}}
+            result = self._post_json(f"/v1/models/{self.model}/generate", payload)
+            return result is not None
+        except:
+            return False
+
+
 class LLMManager:
     """Gestionnaire multi-provider de LLM."""
     
     def __init__(self):
         self.ollama = None
         self.groq = None
+        self.mistral = None
         self.primary_provider = "ollama"  # Par défaut Ollama
     
     def setup_ollama(self, base_url: str, model: str) -> None:
@@ -103,10 +184,15 @@ class LLMManager:
         """Configurer Groq."""
         if api_key and api_key.strip():
             self.groq = GroqService(api_key, model)
+
+    def setup_mistral(self, api_key: str, model: str = "mistral-large") -> None:
+        """Configurer Mistral API."""
+        if api_key and api_key.strip():
+            self.mistral = MistralService(api_key, model)
     
-    def set_primary_provider(self, provider: Literal["ollama", "groq"]) -> None:
+    def set_primary_provider(self, provider: Literal["ollama", "groq", "mistral"]) -> None:
         """Définir le provider par défaut."""
-        if provider in ["ollama", "groq"]:
+        if provider in ["ollama", "groq", "mistral"]:
             self.primary_provider = provider
     
     def generate_instruction(self, query: str, knowledge_hints: str = "", provider: str = None) -> Optional[str]:
@@ -122,30 +208,39 @@ class LLMManager:
         """
         target_provider = provider or self.primary_provider
         
-        # Essayer le provider cible
-        if target_provider == "groq" and self.groq and self.groq.is_available():
-            result = self.groq.generate_maintenance_instruction(query, knowledge_hints)
-            if result:
-                return result
-        
-        if target_provider == "ollama" and self.ollama and self.ollama.is_available():
-            result = self.ollama.generate_maintenance_instruction(query, knowledge_hints)
-            if result:
-                return result
-        
-        # Fallback: essayer l'autre provider
-        if target_provider == "groq" and self.ollama and self.ollama.is_available():
-            return self.ollama.generate_maintenance_instruction(query, knowledge_hints)
-        
-        if target_provider == "ollama" and self.groq and self.groq.is_available():
-            return self.groq.generate_maintenance_instruction(query, knowledge_hints)
-        
+        # Essayer le provider cible puis fallback vers les autres disponibles
+        order = []
+        if target_provider == "ollama":
+            order = ["ollama", "mistral", "groq"]
+        elif target_provider == "mistral":
+            order = ["mistral", "ollama", "groq"]
+        else:
+            order = ["groq", "mistral", "ollama"]
+
+        for p in order:
+            try:
+                if p == "ollama" and self.ollama and getattr(self.ollama, "is_available", lambda: True)():
+                    res = self.ollama.generate_maintenance_instruction(query, knowledge_hints)
+                    if res:
+                        return res
+                if p == "groq" and self.groq and self.groq.is_available():
+                    res = self.groq.generate_maintenance_instruction(query, knowledge_hints)
+                    if res:
+                        return res
+                if p == "mistral" and self.mistral and self.mistral.is_available():
+                    res = self.mistral.generate_maintenance_instruction(query, knowledge_hints)
+                    if res:
+                        return res
+            except Exception:
+                continue
+
         return None
     
     def get_available_providers(self) -> dict:
         """Obtenir les providers disponibles."""
         ollama_available = False
         groq_available = False
+        mistral_available = False
         
         if self.ollama:
             try:
@@ -158,8 +253,15 @@ class LLMManager:
                 groq_available = self.groq.is_available()
             except:
                 groq_available = False
+
+        if self.mistral:
+            try:
+                mistral_available = self.mistral.is_available()
+            except:
+                mistral_available = False
         
         return {
             "ollama": ollama_available,
-            "groq": groq_available
+            "groq": groq_available,
+            "mistral": mistral_available
         }
