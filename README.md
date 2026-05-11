@@ -32,7 +32,7 @@ AURA can help an enterprise by:
 - event history and audit trail
 - planning and scheduling views
 - technical document loading and analysis
-- local Ollama integration for maintenance instruction generation
+- multi-LLM support (Ollama, Mistral, Groq) for maintenance instruction generation
 - local SQLite storage with versioned schema initialization
 
 ## Technology Stack
@@ -54,6 +54,11 @@ AURA can help an enterprise by:
 - sentence-transformers
 - PyPDF2
 - python-docx
+
+### LLM Providers
+- Ollama (local)
+- Mistral API
+- Groq API
 
 ### Reporting
 - reportlab
@@ -92,15 +97,23 @@ AURA/
 pip install -r requirements.txt
 ```
 
-### 2. Configure optional local environment values
+### 2. Configure optional environment variables
 
 Create a `.env` file in the project root if needed:
 
 ```env
 AURA_DB_PATH=data/aura.db
 AURA_DB_FILENAME=aura.db
+
+# Ollama (local)
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.1:8b
+
+# Mistral API
+MISTRAL_API_KEY=your_mistral_api_key
+
+# Groq API
+GROQ_API_KEY=your_groq_api_key
 ```
 
 ### 3. Launch the application

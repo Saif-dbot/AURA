@@ -38,6 +38,7 @@ AURA évolue d'un prototype desktop vers une application locale d'aide à la mai
 
 ### LLM
 - Garder Mistral comme alternative cloud principale.
+- Groq comme alternative haute performance.
 - Garder Ollama seulement si le service local est réellement disponible.
 - Conserver le fallback automatique entre providers.
 - Permettre à l'utilisateur de choisir le provider par défaut.
