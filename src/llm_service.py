@@ -41,3 +41,12 @@ class OllamaService:
             return None
         response_text = result.get("response", "").strip()
         return response_text or None
+
+    def is_available(self) -> bool:
+        """Vérifier si Ollama local répond."""
+        try:
+            payload = {"model": self.model, "prompt": "test", "stream": False, "options": {"temperature": 0}}
+            res = self._post("/api/generate", payload)
+            return res is not None
+        except Exception:
+            return False
