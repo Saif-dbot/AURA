@@ -166,3 +166,7 @@ This project is currently suitable as a local prototype and internal operational
 - packaging and installer creation
 - audit and compliance review
 - RAG indexing pipeline for documents
+
+## Licence
+
+Ce projet est sous licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
