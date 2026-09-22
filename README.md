@@ -2,6 +2,8 @@
 
 **AURA** (Advanced Universal Resume Architect & Analytics) is a local desktop platform designed to support industrial maintenance workflows. The application combines a modern desktop interface, local data persistence, document analysis, and a foundation for AI-assisted maintenance using RAG and a local LLM.
 
+<img src="demo/demo.gif">
+
 ## Business Overview
 
 AURA is built to help maintenance teams centralize operational information, reduce manual work, and improve decision-making. The current version focuses on:
@@ -145,16 +147,6 @@ AURA uses a local SQLite database to store:
 
 The schema is initialized automatically at startup through the local migration runner in `src/database/`.
 
-## Roadmap
-
-See [ROADMAP_IMPROVEMENTS.md](ROADMAP_IMPROVEMENTS.md) for the improvement plan. The current priorities are:
-
-1. RAG for local manuals and reports
-2. LLM-based maintenance assistance
-3. richer CRUD operations for interventions and reports
-4. stronger authentication and roles
-5. packaging and enterprise deployment
-
 ## Notes for Enterprise Use
 
 This project is currently suitable as a local prototype and internal operational tool. Before enterprise deployment, the following should be added or hardened:
@@ -166,3 +158,7 @@ This project is currently suitable as a local prototype and internal operational
 - packaging and installer creation
 - audit and compliance review
 - RAG indexing pipeline for documents
+
+## Licence
+
+Ce projet est sous licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
